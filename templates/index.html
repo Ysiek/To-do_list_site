@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+    <link href="../static/style.css" rel="stylesheet">
+</head>
+<body>
+    <nav>
+        <div class="container d-flex justify-content-end">
+          <ul class="nav">
+            <li class="nav-item"><a href="#" class="nav-link link-body-emphasis px-2">Login</a></li>
+            <li class="nav-item"><a href="#" class="nav-link link-body-emphasis px-2">Sign up</a></li>
+            <li class="nav-item"><a href="#" class="nav-link link-body-emphasis px-2">New list</a></li>
+          </ul>
+        </div>
+    </nav>
+    <main>
+        <div class="list-name">
+            <span>list name</span>
+        </div>
+        <form action="/" method="POST">
+            {{ task_form.csrf_token }}
+            {{ task_form.task(class="type-task", placeholder="Write your next task here...") }}
+            <input type="submit"
+                   style="position: absolute; left: -9999px; width: 1px; height: 1px;"
+                   tabindex="-1" />
+        </form>
+        {% for task in tasks %}
+        <div class="task">
+            <div class="left">
+                <form>
+                    <input type="checkbox">
+                    <span>{{ task.description }}</span>
+                </form>
+            </div>
+            <div class="right">
+                <a href="#">star</a>
+                <a href="#">delete task</a>
+            </div>
+        </div>
+        {% endfor %}
+    </main>
+</body>
+</html>

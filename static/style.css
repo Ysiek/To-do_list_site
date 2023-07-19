@@ -1,0 +1,40 @@
+nav{
+    background-color: grey;
+}
+.list-name{
+    width: 100%;
+    padding: 10px;
+    font-size: 25px;
+    background-color: blueviolet;
+    color: white;
+}
+.list-name span{
+    margin-left: 100px;
+}
+.type-task{
+    width: 100%;
+    padding: 10px;
+    font-size: 30px;
+    border: none;
+}
+.task{
+    width: 100%;
+    display: flex;
+    align-items: center;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    background-color: rgb(209, 255, 255);
+    border: 1px solid rgb(100, 122, 122);
+}
+.left{
+    margin-right: auto;
+    margin-left: 50px;
+    font-size: 30px;
+}
+.left form input{
+    width: 30px;
+    height: 20px;
+}
+.right{
+    margin-right: 50px;
+}
