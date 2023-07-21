@@ -76,6 +76,7 @@ class TaskForm(FlaskForm):
 
 @app.route('/', methods=["GET", "POST"])
 def home():
+    db.create_all()
     task_form = TaskForm()
     result = None
     if current_user.is_authenticated:
@@ -119,6 +120,11 @@ def sign_up():
             db.session.add(new_user)
             db.session.commit()
             login_user(new_user)
+            new_list = List(
+                user_id=current_user.id
+            )
+            db.session.add(new_list)
+            db.session.commit()
             return redirect(url_for('home'))
     return render_template('sign-up.html', form=form)
 
