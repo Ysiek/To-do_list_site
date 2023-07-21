@@ -38,3 +38,7 @@ nav{
 .right{
     margin-right: 50px;
 }
+.bi{
+    text_decoration: none;
+    color: black;
+}
