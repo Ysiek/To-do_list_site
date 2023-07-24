@@ -6,10 +6,9 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from wtforms.validators import DataRequired
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import relationship
-from sqlalchemy import String, ForeignKey
 from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
-import keyboard
 import os
+import time
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ['SECRET']
@@ -34,6 +33,7 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(255), nullable=False)
 
     user = relationship('List', back_populates='user')
+    user_who_create = relationship('Task', back_populates='user')
 
 
 class List(db.Model):
@@ -44,13 +44,17 @@ class List(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     user = relationship('User', back_populates='user')
 
-    # RELATIONSHIP WITH LIST
+    # RELATIONSHIP WITH TASK
     list = relationship('Task', back_populates='list')
 
 
 class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     description = db.Column(db.String(255), nullable=False)
+
+    # RELATIONSHIP WITH USER
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user = relationship('User', back_populates='user_who_create')
 
     # RELATIONSHIP WITH LIST
     list_id = db.Column(db.Integer, db.ForeignKey('list.id'))
@@ -79,19 +83,24 @@ def home():
     db.create_all()
     task_form = TaskForm()
     result = None
+    user_list = None
     if current_user.is_authenticated:
         with app.app_context():
-            result = db.session.scalars(db.select(Task).order_by(Task.id.desc())).all()
+            user_list = db.session.scalars(db.select(List).where(current_user.id == List.id)).first()
+            result = db.session.scalars(db.select(Task).where(Task.user_id==current_user.id).order_by(Task.id.desc())).all()
         if request.method == "POST":
             with app.app_context():
                 new_task = Task(
-                    description=task_form.task.data
+                    description=task_form.task.data,
+                    user_id=current_user.id,
+                    list_id=user_list.id
                 )
                 task_form.task.data = ''
                 db.session.add(new_task)
                 db.session.commit()
+                result = db.session.scalars(db.select(Task).where(Task.user_id == current_user.id).order_by(Task.id.desc())).all()
     return render_template('index.html', task_form=task_form, tasks=result, user=current_user,
-                           logged_in=current_user.is_authenticated)
+                           logged_in=current_user.is_authenticated, user_list=user_list)
 
 
 @app.route('/login', methods=["GET", "POST"])
@@ -121,12 +130,34 @@ def sign_up():
             db.session.commit()
             login_user(new_user)
             new_list = List(
-                user_id=current_user.id
+                name_of_list=time.strftime('%Y-%m-%d'),
+                user_id=current_user.id,
             )
             db.session.add(new_list)
             db.session.commit()
             return redirect(url_for('home'))
     return render_template('sign-up.html', form=form)
+
+@login_required
+@app.route('/add-list/<int:user_id>')
+def create_new_list(user_id):
+    with app.app_context():
+        previous_list = db.session.scalars(db.select(List).where(List.user_id == user_id)).first()
+        tasks_of_previous_list = db.session.scalars(db.select(Task).where(Task.list_id == previous_list.id)).all()
+
+        for tasks in tasks_of_previous_list:
+            db.session.delete(tasks)
+        db.session.delete(previous_list)
+        db.session.commit()
+
+        new_list = List(
+            name_of_list=time.strftime('%Y-%m-%d'),
+            user_id=user_id,
+        )
+        db.session.add(new_list)
+        db.session.commit()
+    return redirect(url_for('home'))
+
 
 
 @app.route('/logout')
