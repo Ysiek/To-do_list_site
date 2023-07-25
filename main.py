@@ -51,6 +51,8 @@ class List(db.Model):
 class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     description = db.Column(db.String(255), nullable=False)
+    is_done = db.Column(db.Integer, nullable=False)
+    star = db.Column(db.Integer, nullable=False)
 
     # RELATIONSHIP WITH USER
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
@@ -82,24 +84,28 @@ class TaskForm(FlaskForm):
 def home():
     db.create_all()
     task_form = TaskForm()
-    result = None
+    all_tasks = None
+    tasks_with_star = None
     user_list = None
     if current_user.is_authenticated:
         with app.app_context():
             user_list = db.session.scalars(db.select(List).where(current_user.id == List.id)).first()
-            result = db.session.scalars(db.select(Task).where(Task.user_id==current_user.id).order_by(Task.id.desc())).all()
         if request.method == "POST":
             with app.app_context():
                 new_task = Task(
                     description=task_form.task.data,
+                    is_done=0,
+                    star=0,
                     user_id=current_user.id,
                     list_id=user_list.id
                 )
                 task_form.task.data = ''
                 db.session.add(new_task)
                 db.session.commit()
-                result = db.session.scalars(db.select(Task).where(Task.user_id == current_user.id).order_by(Task.id.desc())).all()
-    return render_template('index.html', task_form=task_form, tasks=result, user=current_user,
+        tasks_with_star = db.session.scalars(db.select(Task).where(Task.user_id == current_user.id, Task.star == 1).order_by(Task.id.asc())).all()
+        result = db.session.scalars(db.select(Task).where(Task.user_id == current_user.id, Task.star == 0).order_by(Task.id.desc())).all()
+        all_tasks = tasks_with_star + result
+    return render_template('index.html', task_form=task_form, tasks=all_tasks, user=current_user,
                            logged_in=current_user.is_authenticated, user_list=user_list)
 
 
@@ -156,6 +162,28 @@ def create_new_list(user_id):
         )
         db.session.add(new_list)
         db.session.commit()
+    return redirect(url_for('home'))
+
+@login_required
+@app.route('/done-task/<int:task_id>/<int:is_done>')
+def done_task(task_id, is_done):
+    task = db.session.scalars(db.select(Task).where(Task.id == task_id)).first()
+    if is_done == 0:
+        task.is_done = 1
+    else:
+        task.is_done = 0
+    db.session.commit()
+    return redirect(url_for('home'))
+
+@login_required
+@app.route('/star/<int:task_id>/<int:is_star>')
+def star(task_id, is_star):
+    task = db.session.scalars(db.select(Task).where(Task.id == task_id)).first()
+    if is_star == 0:
+        task.star = 1
+    else:
+        task.star = 0
+    db.session.commit()
     return redirect(url_for('home'))
 
 

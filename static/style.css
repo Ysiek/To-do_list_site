@@ -26,19 +26,23 @@ nav{
     background-color: rgb(209, 255, 255);
     border: 1px solid rgb(100, 122, 122);
 }
+.done-task{
+    opacity: 0.6;
+}
 .left{
     margin-right: auto;
     margin-left: 50px;
     font-size: 30px;
-}
-.left form input{
-    width: 30px;
-    height: 20px;
+    display: flex;
+    align-items: center;
 }
 .right{
     margin-right: 50px;
 }
 .bi{
-    text_decoration: none;
+    text-decoration: none;
     color: black;
+}
+a{
+    text-decoration: none;
 }
